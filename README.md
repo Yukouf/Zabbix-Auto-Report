@@ -1,169 +1,170 @@
-# Zabbix Automated Report with Local AI Recommendations
+# Rapport Automatisé Zabbix avec Recommandations IA Locale
 
-> Automated daily supervision report for Zabbix with intelligent filtering, categorization, and AI-powered recommendations using a local LLM (Ollama/Gemma3).
+> Rapport quotidien de supervision Zabbix automatisé avec filtrage intelligent, catégorisation et recommandations IA générées en local via Ollama/Gemma3.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
 ![Zabbix](https://img.shields.io/badge/Zabbix-7.x-D32F2F?logo=zabbix&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-Gemma3:1b-4285F4?logo=google&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-## Overview
+## Présentation
 
-This project automates the generation of a daily Zabbix supervision report sent by email. Instead of checking the Zabbix dashboard manually, the IT team receives a structured Excel report every day with:
+Ce projet automatise la génération d'un rapport de supervision Zabbix envoyé quotidiennement par email. Au lieu de consulter le dashboard manuellement, l'équipe IT reçoit chaque jour un rapport Excel structuré contenant :
 
-- **Key metrics** (hosts, availability, alerts, filtered noise)
-- **Categorized problems** (Servers, Network, Workstations, Peripherals)
-- **AI recommendations** for each problem, generated locally with Ollama
-- **Host inventory** with availability status
-- **Filtered alerts** with exclusion reasons
+- **Indicateurs clés** (hôtes, disponibilité, alertes, bruit filtré)
+- **Problèmes catégorisés** (Serveurs, Réseau, Postes de travail, Périphériques)
+- **Recommandations IA** pour chaque problème, générées en local avec Ollama
+- **Inventaire des hôtes** avec statut de disponibilité
+- **Alertes filtrées** avec raison d'exclusion
 
-All AI processing is done **locally** — no data leaves the network.
+Tout le traitement IA est effectué **en local** — aucune donnée ne sort du réseau.
 
 ## Architecture
 
 ```mermaid
 graph LR
-    A[Cron Job<br/>Daily 1pm] --> B[Python Script]
-    B --> C[Zabbix API<br/>JSON-RPC]
+    A[Tâche Cron<br/>Quotidien 13h] --> B[Script Python]
+    B --> C[API Zabbix<br/>JSON-RPC]
     C --> B
     B --> D[Ollama<br/>Gemma3:1b]
     D --> B
-    B --> E[Excel Report<br/>3 sheets]
-    E --> F[SMTP Email]
-    F --> G[IT Team]
+    B --> E[Rapport Excel<br/>3 onglets]
+    E --> F[Email SMTP]
+    F --> G[Équipe IT]
 ```
 
-## Features
+## Fonctionnalités
 
-### Intelligent Filtering
-The script automatically excludes noise alerts that clutter the dashboard:
-- Severity "Information" and "Not classified"
-- Ethernet speed changes
-- Google Updater events
-- Package installation changes
+### Filtrage intelligent
+Le script exclut automatiquement les alertes non pertinentes :
+- Sévérité "Information" et "Non classé"
+- Changements de vitesse Ethernet
+- Événements Google Updater
+- Changements de paquets installés
 
-### Automatic Categorization
-Problems are classified by equipment type based on host name and agent type:
-| Category | Color | Examples |
-|----------|-------|---------|
-| Servers | Blue | Linux/Windows servers |
-| Network | Orange | Switches, access points |
-| Workstations | Green | User desktops |
-| Peripherals | Purple | Printers |
+### Catégorisation automatique
+Les problèmes sont classés par type d'équipement en fonction du nom d'hôte et du type d'agent :
 
-### AI Recommendations
-Each problem is sent to a local LLM (Gemma3 1B via Ollama) that generates a concrete recommendation in 2-3 sentences. Examples:
+| Catégorie | Couleur | Exemples |
+|-----------|---------|----------|
+| Serveurs | Bleu | Serveurs Linux/Windows |
+| Réseau | Orange | Switches, points d'accès |
+| Postes de travail | Vert | Postes utilisateurs |
+| Périphériques | Violet | Imprimantes |
 
-| Problem | AI Recommendation |
-|---------|-------------------|
-| Disk space critically low (>90%) | Check and clean /var/log. Consider extending the partition with LVM. |
-| Zabbix agent unavailable | Check if the agent service is running. Restart with systemctl restart zabbix-agent. |
-| Interface link down | Verify the physical cable connection. Check switch port status. |
+### Recommandations IA
+Chaque problème est envoyé à un LLM local (Gemma3 1B via Ollama) qui génère une recommandation concrète en 2-3 phrases. Exemples :
 
-### Excel Report (3 Sheets)
+| Problème | Recommandation IA |
+|----------|-------------------|
+| Espace disque critique (>90%) | Vérifier et nettoyer /var/log. Envisager d'étendre la partition avec LVM. |
+| Agent Zabbix indisponible | Vérifier si le service agent tourne. Redémarrer avec systemctl restart zabbix-agent. |
+| Interface link down | Vérifier la connexion physique du câble. Contrôler le port du switch. |
 
-**Sheet 1 — Daily Report**
-- KPI dashboard (hosts, availability, alerts, filtered)
-- "Points of Attention" section for high/critical alerts
-- Problems grouped by category with severity colors and AI recommendations
+### Rapport Excel (3 onglets)
 
-**Sheet 2 — Host Inventory**
-- Complete list of monitored hosts
-- IP address, agent type, groups, status, availability
-- Color-coded by availability (red = unavailable, gray = disabled)
+**Onglet 1 — Rapport quotidien**
+- Tableau de bord KPI (hôtes, disponibilité, alertes, filtrées)
+- Section "Points d'attention" pour les alertes critiques
+- Problèmes groupés par catégorie avec couleurs de sévérité et recommandations IA
 
-**Sheet 3 — Filtered Alerts**
-- Excluded events with exclusion reason
-- Allows verification that filtering doesn't hide important issues
+**Onglet 2 — Inventaire des hôtes**
+- Liste complète des équipements supervisés
+- Adresse IP, type d'agent, groupes, état, disponibilité
+- Code couleur par disponibilité (rouge = indisponible, gris = désactivé)
 
-## Prerequisites
+**Onglet 3 — Alertes filtrées**
+- Événements exclus avec raison d'exclusion
+- Permet de vérifier que le filtrage ne masque pas un problème important
+
+## Prérequis
 
 - Python 3.10+
-- Zabbix Server 7.x with API access
-- Ollama with a language model
-- SMTP server for email delivery
+- Serveur Zabbix 7.x avec accès API
+- Ollama avec un modèle de langage
+- Serveur SMTP pour l'envoi d'emails
 
 ## Installation
 
-### 1. Install dependencies
+### 1. Installer les dépendances
 
 ```bash
 pip3 install openpyxl --break-system-packages
 ```
 
-### 2. Install Ollama and pull the model
+### 2. Installer Ollama et télécharger le modèle
 
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ollama pull gemma3:1b
 ```
 
-### 3. Create a dedicated Zabbix API user
+### 3. Créer un compte API dédié dans Zabbix
 
-In Zabbix: **Administration → Users → Create user**
-- Username: `rapport-auto`
-- Role: Super admin role (API read access)
-- Group: Zabbix administrators
+Dans Zabbix : **Administration → Utilisateurs → Créer un utilisateur**
+- Nom d'utilisateur : `rapport-auto`
+- Rôle : Super admin role (accès lecture API)
+- Groupe : Zabbix administrators
 
-### 4. Deploy the script
+### 4. Déployer le script
 
 ```bash
-mkdir -p /path/to/reports
-cp zabbix_rapport_auto.py /path/to/reports/
+mkdir -p /chemin/vers/rapports
+cp zabbix_rapport_auto.py /chemin/vers/rapports/
 ```
 
-### 5. Configure
+### 5. Configurer
 
-Edit the configuration section at the top of the script:
+Modifier les variables de configuration en haut du script :
 
 ```python
-# Zabbix API
-ZABBIX_URL = "https://your-zabbix-server/api_jsonrpc.php"
+# API Zabbix
+ZABBIX_URL = "https://votre-serveur-zabbix/api_jsonrpc.php"
 ZABBIX_USER = "rapport-auto"
-ZABBIX_PASS = "YourSecurePassword"
+ZABBIX_PASS = "VotreMotDePasse"
 
 # SMTP
-SMTP_SERVER = "smtp.your-provider.com"
+SMTP_SERVER = "smtp.votre-fournisseur.com"
 SMTP_PORT = 587
-SMTP_USER = "your-smtp-user"
-SMTP_PASS = "your-smtp-password"
-SMTP_FROM = "Zabbix Alerts <alerts@your-domain.com>"
-EMAIL_TO = ["admin@your-domain.com"]
+SMTP_USER = "votre-compte-smtp"
+SMTP_PASS = "votre-mot-de-passe-smtp"
+SMTP_FROM = "Zabbix Alertes <alertes@votre-domaine.com>"
+EMAIL_TO = ["admin@votre-domaine.com"]
 
-# Ollama (local AI)
+# Ollama (IA locale)
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 OLLAMA_MODEL = "gemma3:1b"
 
-# Report directory
-REPORT_DIR = "/path/to/reports"
+# Dossier des rapports
+REPORT_DIR = "/chemin/vers/rapports"
 ```
 
-### 6. Test
+### 6. Tester
 
 ```bash
-# Test email only
+# Tester l'envoi email uniquement
 python3 zabbix_rapport_auto.py --test-email
 
-# Generate report without sending email
+# Générer le rapport sans envoyer par email
 python3 zabbix_rapport_auto.py --no-email
 
-# Full run (generate + send)
+# Exécution complète (génération + envoi)
 python3 zabbix_rapport_auto.py
 ```
 
-### 7. Schedule with cron
+### 7. Planifier avec cron
 
 ```bash
 crontab -e
-# Add this line (runs daily at 1pm):
-0 13 * * * /usr/bin/python3 /path/to/reports/zabbix_rapport_auto.py >> /path/to/reports/cron.log 2>&1
+# Ajouter cette ligne (exécution quotidienne à 13h) :
+0 13 * * * /usr/bin/python3 /chemin/vers/rapports/zabbix_rapport_auto.py >> /chemin/vers/rapports/cron.log 2>&1
 ```
 
-## Customization
+## Personnalisation
 
-### Filtering rules
+### Règles de filtrage
 
-Add patterns to exclude in `EXCLUDED_PATTERNS`:
+Ajouter des patterns à exclure dans `EXCLUDED_PATTERNS` :
 
 ```python
 EXCLUDED_PATTERNS = [
@@ -174,26 +175,26 @@ EXCLUDED_PATTERNS = [
 ]
 ```
 
-### Host classification
+### Classification des hôtes
 
-Modify `classify_host()` to match your naming convention:
+Modifier `classify_host()` pour correspondre à votre convention de nommage :
 
 ```python
 NETWORK_KEYWORDS = ["aruba", "hp-2530", "switch"]
 ```
 
-### AI model
+### Modèle IA
 
-You can use any Ollama-compatible model. Lighter models are faster, heavier models give better recommendations:
+Vous pouvez utiliser n'importe quel modèle compatible Ollama. Les modèles légers sont plus rapides, les plus lourds donnent de meilleures recommandations :
 
-| Model | Size | Speed | Quality |
-|-------|------|-------|---------|
-| gemma3:1b | 1B | Fast | Good |
-| gemma3:4b | 4B | Medium | Better |
-| llama3.2:3b | 3B | Medium | Good |
-| mistral:7b | 7B | Slow | Best |
+| Modèle | Taille | Vitesse | Qualité |
+|--------|--------|---------|---------|
+| gemma3:1b | 1B | Rapide | Bonne |
+| gemma3:4b | 4B | Moyenne | Meilleure |
+| llama3.2:3b | 3B | Moyenne | Bonne |
+| mistral:7b | 7B | Lente | Excellente |
 
-## How It Works
+## Fonctionnement détaillé
 
 ```mermaid
 sequenceDiagram
@@ -203,47 +204,43 @@ sequenceDiagram
     participant Ollama
     participant SMTP
 
-    Cron->>Script: Execute daily
-    Script->>Ollama: Health check
+    Cron->>Script: Exécution quotidienne
+    Script->>Ollama: Vérification santé
     Ollama-->>Script: OK
-    Script->>Zabbix: user.login (Bearer token)
-    Zabbix-->>Script: Auth token
+    Script->>Zabbix: user.login (token Bearer)
+    Zabbix-->>Script: Token d'authentification
     Script->>Zabbix: host.get
-    Zabbix-->>Script: 33 hosts
+    Zabbix-->>Script: 33 hôtes
     Script->>Zabbix: problem.get
-    Zabbix-->>Script: 44 problems
+    Zabbix-->>Script: 44 problèmes
     Script->>Zabbix: trigger.get
     Zabbix-->>Script: 44 triggers
-    Note over Script: Filter (19 excluded)
-    Note over Script: Categorize (25 alerts)
-    loop For each alert
-        Script->>Ollama: Generate recommendation
-        Ollama-->>Script: AI recommendation
+    Note over Script: Filtrage (19 exclues)
+    Note over Script: Catégorisation (25 alertes)
+    loop Pour chaque alerte
+        Script->>Ollama: Générer recommandation
+        Ollama-->>Script: Recommandation IA
     end
-    Note over Script: Generate Excel (3 sheets)
-    Script->>SMTP: Send email with attachment
-    SMTP-->>Script: Delivered
+    Note over Script: Génération Excel (3 onglets)
+    Script->>SMTP: Envoi email avec pièce jointe
+    SMTP-->>Script: Délivré
 ```
 
-## Technical Details
+## Détails techniques
 
-- **Zabbix API**: JSON-RPC with Bearer token authentication (Zabbix 7.x)
-- **SSL**: Self-signed certificate support (configurable)
-- **AI**: Local inference via Ollama HTTP API, temperature 0.3, max 150 tokens per recommendation
-- **Excel**: Generated with openpyxl, styled with colors, borders, and conditional formatting
-- **Email**: SMTP with STARTTLS, supports multiple recipients
+- **API Zabbix** : JSON-RPC avec authentification Bearer token (Zabbix 7.x)
+- **SSL** : Support des certificats auto-signés (configurable)
+- **IA** : Inférence locale via l'API HTTP Ollama, température 0.3, max 150 tokens par recommandation
+- **Excel** : Généré avec openpyxl, mis en forme avec couleurs, bordures et mise en forme conditionnelle
+- **Email** : SMTP avec STARTTLS, support de plusieurs destinataires
 
-## Security
+## Sécurité
 
-- All AI processing is done locally — **no data leaves the network**
-- Dedicated API user with minimal permissions
-- SMTP with TLS encryption
-- No sensitive data in the report (only hostnames and problem descriptions)
+- Tout le traitement IA est effectué en local — **aucune donnée ne sort du réseau**
+- Compte API dédié avec permissions minimales
+- SMTP avec chiffrement TLS
+- Pas de données sensibles dans le rapport (uniquement noms d'hôtes et descriptions de problèmes)
 
-## License
+## Licence
 
-MIT License — feel free to adapt for your own infrastructure.
-
-## Author
-
-Cybersecurity apprentice — Blue Team / SecOps automation project.
+Licence MIT — n'hésitez pas à adapter pour votre propre infrastructure.
