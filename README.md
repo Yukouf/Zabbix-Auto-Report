@@ -1,5 +1,7 @@
 # Rapport Automatisé Zabbix avec Recommandations IA Locale
 
+<img src="Zabbix_logo.svg.png" width="100%">
+
 > Rapport quotidien de supervision Zabbix automatisé avec filtrage intelligent, catégorisation et recommandations IA générées en local via Ollama/Gemma3.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
